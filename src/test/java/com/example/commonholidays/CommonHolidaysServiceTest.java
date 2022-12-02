@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
@@ -25,46 +26,56 @@ public class CommonHolidaysServiceTest {
 
     @Test
     public void testGetCommonHolidays() {
-        RawHolidayData[] firstCountryHolidays = {new RawHolidayData("2022-01-01", "Jaunais Gads",
-                "New Year's Day", "LV", true, true, null, 0,
-                List.of("Public")),
-                new RawHolidayData("2022-04-15", "Lielā Piektdiena",
+        RawHolidayData[] firstCountryHolidays = {new RawHolidayData(LocalDate.parse("2022-01-01"),
+                "Jaunais Gads", "New Year's Day", "LV", true, true,
+                null, 0, List.of("Public")),
+                new RawHolidayData(LocalDate.parse("2022-04-15"), "Lielā Piektdiena",
                         "Good Friday", "LV", false, true, null, 0,
                         List.of("Public")),
-                new RawHolidayData("2022-05-01", "Darba svētki",
+                new RawHolidayData(LocalDate.parse("2022-05-01"), "Darba svētki",
                         "Labour Day", "LV", true, true, null, 0,
                         List.of("Public"))};
-        RawHolidayData[] secondCountryHolidays = {new RawHolidayData("2022-01-01", "New Year's Day",
-                "New Year's Day", "GB", false, false, null, 0,
-                List.of("Public")),
-                new RawHolidayData("2022-04-15", "Good Friday",
+        RawHolidayData[] secondCountryHolidays = {new RawHolidayData(LocalDate.parse("2022-01-01"),
+                "New Year's Day", "New Year's Day", "GB", false,
+                false, null, 0, List.of("Public")),
+                new RawHolidayData(LocalDate.parse("2022-04-15"), "Good Friday",
                         "Good Friday", "GB", false, true, null, 0,
                         List.of("Public"))};
 
-        Mockito.doAnswer(invocation -> firstCountryHolidays).when(commonHolidaysService).callApi("LV", 2022);
-        Mockito.doAnswer(invocation -> secondCountryHolidays).when(commonHolidaysService).callApi("GB", 2022);
+        Mockito.doAnswer(invocation -> firstCountryHolidays)
+                .when(commonHolidaysService).callApi("LV", 2022);
+        Mockito.doAnswer(invocation -> secondCountryHolidays)
+                .when(commonHolidaysService).callApi("GB", 2022);
 
-        List<Holiday> firstList = commonHolidaysService.getCommonHolidays("LV", "GB", 2022);
+        List<Holiday> commonHolidays = commonHolidaysService
+                .getCommonHolidays("LV", "GB", 2022);
 
-        Assertions.assertEquals(2, firstList.size());
-        Assertions.assertEquals("2022-01-01", firstList.get(0).getDate());
-        Assertions.assertEquals("New Year's Day", firstList.get(0).getName());
-        Assertions.assertEquals("2022-04-15", firstList.get(1).getDate());
-        Assertions.assertEquals("Good Friday", firstList.get(1).getName());
+        Assertions.assertEquals(2, commonHolidays.size());
+        Assertions.assertEquals(LocalDate.parse("2022-01-01"), commonHolidays.get(0).getDate());
+        Assertions.assertEquals("New Year's Day", commonHolidays.get(0).getName());
+        Assertions.assertEquals(LocalDate.parse("2022-04-15"), commonHolidays.get(1).getDate());
+        Assertions.assertEquals("Good Friday", commonHolidays.get(1).getName());
     }
 
     @Test
-    public void testApiCallWithWrongCountryCodeInPath() {
-        ResponseStatusException exception = Assertions.assertThrows(ResponseStatusException.class,
-                () -> commonHolidaysService.getCommonHolidays("LV", "YY", 2022));
-        Assertions.assertEquals("Please enter correct data in Path!", exception.getReason());
-    }
+    public void testGetCommonHolidaysWithoutMatchingHolidays() {
+        RawHolidayData[] firstCountryHolidays = {new RawHolidayData(LocalDate.parse("2022-01-01"),
+                "Jaunais Gads", "New Year's Day", "LV", true, true,
+                null, 0, List.of("Public"))};
 
-    @Test
-    public void testApiCallWithWrongYearInPath() {
-        ResponseStatusException exception = Assertions.assertThrows(ResponseStatusException.class,
-                () -> commonHolidaysService.getCommonHolidays("LV", "GB", 20222));
-        Assertions.assertEquals("Please enter correct data in Path!", exception.getReason());
+        RawHolidayData[] secondCountryHolidays = {new RawHolidayData(LocalDate.parse("2022-04-15"),
+                "Good Friday", "Good Friday", "GB", false, true,
+                null, 0, List.of("Public"))};
+
+        Mockito.doAnswer(invocation -> firstCountryHolidays).
+                when(commonHolidaysService).callApi("LV", 2022);
+        Mockito.doAnswer(invocation -> secondCountryHolidays).
+                when(commonHolidaysService).callApi("GB", 2022);
+
+        List<Holiday> commonHolidays = commonHolidaysService
+                .getCommonHolidays("LV", "GB", 2022);
+
+        Assertions.assertTrue(commonHolidays.isEmpty());
     }
 
 

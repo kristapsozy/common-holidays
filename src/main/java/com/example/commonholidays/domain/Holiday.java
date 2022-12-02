@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.Objects;
 
 @Data
@@ -12,7 +13,7 @@ import java.util.Objects;
 public class Holiday {
 
     private String name;
-    private String date;
+    private LocalDate date;
 
 }
 
